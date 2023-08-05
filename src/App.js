@@ -20,7 +20,7 @@ export default function App() {
       <Logo />
       <Form onAddItem={handleAddItems} />
       <PackingList items={items} onDeleteItem={handleDeleteItem} onToggleItem={handleToggleItem} />
-      <Stats />
+      <Stats items={items} />
     </div>
   );
 }
@@ -63,13 +63,28 @@ function Form({ onAddItem }) {
 }
 
 function PackingList({ items, onDeleteItem, onToggleItem }) {
+  const [sortBy, setSortBy] = useState("input");
+  let sortedItem;
+
+  if (sortBy === "input") sortedItem = items;
+  if (sortBy === "description") sortedItem = items.slice().sort((a, b) => a.description.localeCompare(b.description));
+  if (sortBy === "packed") sortedItem = items.slice().sort((a, b) => Number(a.packed) - Number(b.packed));
+
   return (
     <div className="list">
       <ul>
-        {items.map((item) => (
+        {sortedItem.map((item) => (
           <Item item={item} key={item.id} onDeleteItem={onDeleteItem} onToggleItem={onToggleItem} />
         ))}
       </ul>
+
+      <div className="actions">
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+          <option value="input">Sort by Input Order</option>
+          <option value="description">Sort by Description</option>
+          <option value="packed">Sort by Packed Status</option>
+        </select>
+      </div>
     </div>
   );
 }
@@ -86,10 +101,20 @@ function Item({ item, onDeleteItem, onToggleItem }) {
   );
 }
 
-function Stats() {
+function Stats({ items }) {
+  if (!items.length)
+    return (
+      <footer className="stats">
+        <em>Start adding some items to your packing list 🚀</em>
+      </footer>
+    );
+
+  const numItems = items.length;
+  const numPacked = items.filter((item) => item.packed).length;
+  const percentage = Math.round((numPacked / numItems) * 100);
   return (
     <footer className="stats">
-      <em>You have X items on lyour list, and you already packed X (X%)</em>
+      <em>{percentage === 100 ? "You got everything! ready to go ✈️" : `💼 You have ${numItems} items on your list, and you already packed X ${numPacked} (${percentage}%)`}</em>
     </footer>
   );
 }
